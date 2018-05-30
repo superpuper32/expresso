@@ -94,7 +94,7 @@ timesheetsRouter.put('/:timesheetId', validateTimesheets, (req, res, next) => {
         if (err) {
           next(err);
         } else {
-          db.get(`SELECT * FROM Timesheet WHERE TImesheet.id = ${req.params.timesheetId}`,
+          db.get(`SELECT * FROM Timesheet WHERE Timesheet.id = ${req.params.timesheetId}`,
           (err, timesheet) => {
             res.status(200).json({timesheet: timesheet});
           });
