@@ -7,9 +7,9 @@ const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite'
 const menuitemsRouter = require('./menu-items.js');
 
 menusRouter.param('menuId', (req, res, next, menuId) => {
-  db.get('SELECT * FROM Menu WHERE Menu.id = $menuId', {
-    $menuId: menuId
-  }, (err, menu) => {
+  const sql = 'SELECT * FROM Menu WHERE Menu.id = $menuId';
+  const value = { $menuId: menuId };
+  db.get(sql, value, (err, menu) => {
     if (err) {
       next(err);
     } else if (menu) {
@@ -24,7 +24,8 @@ menusRouter.param('menuId', (req, res, next, menuId) => {
 menusRouter.use('/:menuId/menu-items', menuitemsRouter);
 
 menusRouter.get('/', (req, res, next) => {
-  db.all('SELECT * FROM Menu', (err, menus) => {
+  const sql = 'SELECT * FROM Menu';
+  db.all(sql, (err, menus) => {
     if (err) {
       next(err);
     }
@@ -45,10 +46,9 @@ const validateMenu = (req, res, next) => {
 };
 
 menusRouter.post('/', validateMenu, (req, res, next) => {
-  const menuToCreate = req.body.menu;
-  db.run('INSERT INTO Menu (title) VALUES ($title)', {
-    $title: menuToCreate.title
-  }, function(err) {
+  const sql = 'INSERT INTO Menu (title) VALUES ($title)';
+  const value = { $title: req.body.menu.title };
+  db.run(sql, value, function(err) {
     if (err) {
       next(err);
     } else {
@@ -61,11 +61,12 @@ menusRouter.post('/', validateMenu, (req, res, next) => {
 });
 
 menusRouter.put('/:menuId', validateMenu, (req, res, next) => {
-  const menuToUpdate = req.body.menu;
-  db.run('UPDATE Menu SET title = $title WHERE Menu.id = $menuId', {
-    $title: menuToUpdate.title,
+  const sql = 'UPDATE Menu SET title = $title WHERE Menu.id = $menuId';
+  const values = {
+    $title: req.body.menu.title,
     $menuId: req.params.menuId
-  }, (err) => {
+  };
+  db.run(sql, values, (err) => {
     if (err) {
       next(err);
     } else {
@@ -78,9 +79,9 @@ menusRouter.put('/:menuId', validateMenu, (req, res, next) => {
 });
 
 menusRouter.delete('/:menuId', (req, res, next) => {
-  db.get('SELECT * FROM MenuItem WHERE MenuItem.menu_id = $menuId', {
-    $menuId: req.params.menuId
-  }, (err, menuItem) => {
+  const sql = 'SELECT * FROM MenuItem WHERE MenuItem.menu_id = $menuId';
+  const value = { $menuId: req.params.menuId };
+  db.get(sql, value, (err, menuItem) => {
     if (err) {
       next(err);
     } else if (menuItem) {
