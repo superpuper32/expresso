@@ -5,9 +5,9 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
 timesheetsRouter.param('timesheetId', (req, res, next, timesheetId) => {
-  db.get('SELECT * FROM Timesheet WHERE Timesheet.id = $timesheetId', {
-    $timesheetId: timesheetId
-  }, (err, timesheet) => {
+const sql = 'SELECT * FROM Timesheet WHERE Timesheet.id = $timesheetId';
+const value = { $timesheetId: timesheetId };
+  db.get(sql, value, (err, timesheet) => {
     if (err) {
       next(err);
     } else if (timesheet) {
@@ -20,9 +20,9 @@ timesheetsRouter.param('timesheetId', (req, res, next, timesheetId) => {
 });
 
 timesheetsRouter.get('/', (req, res, next) => {
-  db.all('SELECT * FROM Timesheet WHERE Timesheet.employee_id = $employeeId', {
-    $employeeId: req.params.employeeId
-  }, (err, timesheets) => {
+const sql = 'SELECT * FROM Timesheet WHERE Timesheet.employee_id = $employeeId';
+const value = {$employeeId: req.params.employeeId };
+  db.all(sql, value, (err, timesheets) => {
     if (err) {
       next(err);
     } else {
@@ -40,10 +40,9 @@ const validateTimesheets = (req, res, next) => {
 };
 
 timesheetsRouter.post('/', validateTimesheets, (req, res, next) => {
-  const timesheetToCreate = req.body.timesheet;
-  db.get('SELECT * FROM Employee WHERE Employee.id = $employeeId', {
-    $employeeId: req.params.employeeId
-  }, (err, employee) => {
+  const employeeSql = 'SELECT * FROM Employee WHERE Employee.id = $employeeId';
+  const menuValue = { $employeeId: req.params.employeeId };
+  db.get(employeeSql, menuValue, (err, employee) => {
     if (err) {
       next(err);
     } else {
@@ -51,13 +50,16 @@ timesheetsRouter.post('/', validateTimesheets, (req, res, next) => {
         return res.sendStatus(400);
       }
 
-      db.run('INSERT INTO Timesheet (hours, rate, date, employee_id) ' +
-      'VALUES ($hours, $rate, $date, $employeeId)', {
-        $hours: timesheetToCreate.hours,
-        $rate: timesheetToCreate.rate,
-        $date: timesheetToCreate.date,
+      const value = {
+        $hours: req.body.timesheet.hours,
+        $rate: req.body.timesheet.rate,
+        $date: req.body.timesheet.date,
         $employeeId: req.params.employeeId
-      }, function(err) {
+      };
+      const sql = 'INSERT INTO Timesheet (hours, rate, date, employee_id) ' +
+      'VALUES ($hours, $rate, $date, $employeeId)';
+
+      db.run(sql, value, function(err) {
         if (err) {
           next(err);
         } else {
@@ -72,10 +74,9 @@ timesheetsRouter.post('/', validateTimesheets, (req, res, next) => {
 });
 
 timesheetsRouter.put('/:timesheetId', validateTimesheets, (req, res, next) => {
-  const timesheetToUpdate = req.body.timesheet;
-  db.get('SELECT * FROM Employee WHERE Employee.id = $employeeId', {
-    $employeeId: req.params.employeeId
-  }, (err, employee) => {
+  const employeeSql = 'SELECT * FROM Employee WHERE Employee.id = $employeeId';
+  const employeeValue = { $employeeId: req.params.employeeId };
+  db.get(employeeSql, employeeValue, (err, employee) => {
     if (err) {
       next(err);
     } else {
@@ -83,14 +84,17 @@ timesheetsRouter.put('/:timesheetId', validateTimesheets, (req, res, next) => {
         res.sendStatus(400);
       }
 
-      db.run('UPDATE Timesheet SET hours = $hours, rate = $rate, date = $date, employee_id = $employeeId ' +
-      'WHERE Timesheet.id = $timesheetId', {
-        $hours: timesheetToUpdate.hours,
-        $rate: timesheetToUpdate.rate,
-        $date: timesheetToUpdate.date,
+      const sql = 'UPDATE Timesheet SET hours = $hours, rate = $rate, date = $date, employee_id = $employeeId ' +
+      'WHERE Timesheet.id = $timesheetId';
+      const value = {
+        $hours: req.body.timesheet.hours,
+        $rate: req.body.timesheet.rate,
+        $date: req.body.timesheet.date,
         $employeeId: req.params.employeeId,
         $timesheetId: req.params.timesheetId
-      }, function (err) {
+      };
+
+      db.run(sql, value, function (err) {
         if (err) {
           next(err);
         } else {
@@ -105,9 +109,9 @@ timesheetsRouter.put('/:timesheetId', validateTimesheets, (req, res, next) => {
 });
 
 timesheetsRouter.delete('/:timesheetId', (req, res, next) => {
-  db.run('DELETE FROM Timesheet WHERE Timesheet.id = $timesheetId', {
-    $timesheetId: req.params.timesheetId
-  }, (err) => {
+  const sql = 'DELETE FROM Timesheet WHERE Timesheet.id = $timesheetId';
+  const value = { $timesheetId: req.params.timesheetId };
+  db.run(sql, value, (err) => {
     if (err) {
       next(err);
     } else {
